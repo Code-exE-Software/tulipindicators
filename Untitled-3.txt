@@ -1,0 +1,238 @@
+func TiAbs(size int, inputs []float64, options []float64, outputs []float64) int{
+	return C.ti_abs(size, inputs, options, outputs);
+}
+
+
+
+
+
+
+/* Vector Arccosine */
+/* Type: simple */
+/* Input arrays: 1    Options: 0    Output arrays: 1 */
+/* Inputs: real */
+/* Options: none */
+/* Outputs: acos */
+/* int ti_acos_start(TI_REAL const *options);
+int ti_acos(int size,
+      TI_REAL const *const *inputs,
+      TI_REAL const *options,
+	  TI_REAL *const *outputs); */
+
+func TiAcosStart(options []float64) int {
+	return C.ti_acos_start(options);
+}
+
+func TiAcos(size int, inputs []float64, options []float64, outputs []float64) int{
+	return C.ti_acos(size, inputs, options, outputs);
+}
+
+
+
+
+
+/* Accumulation/Distribution Line */
+/* Type: indicator */
+/* Input arrays: 4    Options: 0    Output arrays: 1 */
+/* Inputs: high, low, close, volume */
+/* Options: none */
+/* Outputs: ad */
+/* int ti_ad_start(TI_REAL const *options);
+int ti_ad(int size,
+      TI_REAL const *const *inputs,
+      TI_REAL const *options,
+	  TI_REAL *const *outputs); */
+
+func TiAdStart(options []float64) int {
+	return C.ti_ad_start(options);
+}
+
+func TiAd(size int, inputs []float64, options []float64, outputs []float64) int{
+	return C.ti_ad(size, inputs, options, outputs);
+}
+	  
+	  
+
+
+
+
+
+/* Vector Addition */
+/* Type: simple */
+/* Input arrays: 2    Options: 0    Output arrays: 1 */
+/* Inputs: real, real */
+/* Options: none */
+/* Outputs: add */
+/* int ti_add_start(TI_REAL const *options);
+int ti_add(int size,
+      TI_REAL const *const *inputs,
+      TI_REAL const *options,
+	  TI_REAL *const *outputs); */
+
+func TiAddStart(options []float64) int {
+	return C.ti_add_start(options);
+}
+
+func TiAdd(size int, inputs []float64, options []float64, outputs []float64) int{
+	return C.ti_add(size, inputs, options, outputs);
+}
+
+
+
+
+
+/* Accumulation/Distribution Oscillator */
+/* Type: indicator */
+/* Input arrays: 4    Options: 2    Output arrays: 1 */
+/* Inputs: high, low, close, volume */
+/* Options: short period, long period */
+/* Outputs: adosc */
+func TiAdoscStart(options []float64) int {
+	return C.ti_adosc_start(options);
+}
+
+func TiAdosc(size int, inputs []float64, options []float64, outputs []float64) int{
+	return C.ti_adosc(size, inputs, options, outputs);
+}
+
+
+
+
+
+/* Average Directional Movement Index */
+/* Type: indicator */
+/* Input arrays: 3    Options: 1    Output arrays: 1 */
+/* Inputs: high, low, close */
+/* Options: period */
+/* Outputs: dx */
+func TiAdxStart(options []float64) int {
+	return C.ti_adx_start(options);
+}
+
+func TiAdx(size int, inputs []float64, options []float64, outputs []float64) int{
+	return C.ti_adx(size, inputs, options, outputs);
+}
+
+
+
+
+
+
+/* Average Directional Movement Rating */
+/* Type: indicator */
+/* Input arrays: 3    Options: 1    Output arrays: 1 */
+/* Inputs: high, low, close */
+/* Options: period */
+/* Outputs: dx */
+func TiAdxrStart(options []float64) int {
+	return C.ti_adxr_start(options);
+}
+
+func TiAdxr(size int, inputs []float64, options []float64, outputs []float64) int{
+	return C.ti_adxr(size, inputs, options, outputs);
+}
+
+
+/* Awesome Oscillator */
+/* Type: indicator */
+/* Input arrays: 2    Options: 0    Output arrays: 1 */
+/* Inputs: high, low */
+/* Options: none */
+/* Outputs: ao */
+func TiAoStart(options []float64) int {
+	return C.ti_ao_start(options);
+}
+
+func TiAo(size int, inputs []float64, options []float64, outputs []float64) int{
+	return C.ti_ao(size, inputs, options, outputs);
+}
+
+
+
+
+
+/* Absolute Price Oscillator */
+/* Type: indicator */
+/* Input arrays: 1    Options: 2    Output arrays: 1 */
+/* Inputs: real */
+/* Options: short period, long period */
+/* Outputs: apo */
+func TiApoStart(options []float64) int {
+	return C.ti_apo_start(options);
+}
+
+func TiApo(size int, inputs []float64, options []float64, outputs []float64) int{
+	return C.ti_apo(size, inputs, options, outputs);
+}
+
+
+
+/* Aroon */
+/* Type: indicator */
+/* Input arrays: 2    Options: 1    Output arrays: 2 */
+/* Inputs: high, low */
+/* Options: period */
+/* Outputs: aroon_down, aroon_up */
+func TiAroonStart(options []float64) int {
+	return C.ti_aroon_start(options);
+}
+
+func TiAroon(size int, inputs []float64, options []float64, outputs []float64) int{
+	return C.ti_aroon(size, inputs, options, outputs);
+}
+
+
+
+
+
+/* Aroon Oscillator */
+/* Type: indicator */
+/* Input arrays: 2    Options: 1    Output arrays: 1 */
+/* Inputs: high, low */
+/* Options: period */
+/* Outputs: aroonosc */
+func TiAroonOscStart(options []float64) int {
+	return C.ti_aroonosc_start(options);
+}
+
+func TiAroonOsc(size int, inputs []float64, options []float64, outputs []float64) int{
+	return C.ti_aroonosc(size, inputs, options, outputs);
+}
+
+
+
+
+
+
+/* Vector Arcsine */
+/* Type: simple */
+/* Input arrays: 1    Options: 0    Output arrays: 1 */
+/* Inputs: real */
+/* Options: none */
+/* Outputs: asin */
+func TiAsinStart(options []float64) int {
+	return C.ti_asin_start(options);
+}
+
+func TiAsin(size int, inputs []float64, options []float64, outputs []float64) int{
+	return C.ti_asin(size, inputs, options, outputs);
+}
+
+
+
+
+
+/* Vector Arctangent */
+/* Type: simple */
+/* Input arrays: 1    Options: 0    Output arrays: 1 */
+/* Inputs: real */
+/* Options: none */
+/* Outputs: atan */
+func TiAtanStart(options []float64) int {
+	return C.ti_atan_start(options);
+}
+
+func TiAtan(size int, inputs []float64, options []float64, outputs []float64) int{
+	return C.ti_atan(size, inputs, options, outputs);
+}
+
