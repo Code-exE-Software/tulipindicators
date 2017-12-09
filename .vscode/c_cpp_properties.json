@@ -5,6 +5,10 @@
             "intelliSenseMode": "clang-x64",
             "includePath": [
                 "${workspaceRoot}",
+                "./external/c/tulipindicators",
+                "./external/c/tulipindicators/indicators",
+                "./external/c/tulipindicators/utils",
+                "./external/c",
                 "C:/tools/mingw64/x86_64-w64-mingw32/include",
                 "C:/tools/mingw64/x86_64-w64-mingw32/include/c++",
                 "C:/tools/mingw64/lib/gcc/x86_64-w64-mingw32/5.3.0/include",

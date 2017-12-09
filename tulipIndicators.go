@@ -1,4 +1,4 @@
-package tulipIndicators
+package tulipindicators
 
 // #cgo LDFLAGS: -L./external -lindicators
 // #include <external/indicators.h>
@@ -6,24 +6,42 @@ import (
 	"C"
 )
 
-/* type Start func(options []float64) int
-type Do func(size int, inputs []float64, options []float64, outputs []float64) int */
-
-/* Vector Absolute Value */
-/* Type: simple */
-/* Input arrays: 1    Options: 0    Output arrays: 1 */
-/* Inputs: real */
-/* Options: none */
-/* Outputs: abs */
-/* int ti_abs_start(TI_REAL const *options);
+/*int ti_abs_start(TI_REAL const *options);
 int ti_abs(int size,
       TI_REAL const *const *inputs,
       TI_REAL const *options,
-	  TI_REAL *const *outputs); */
+      TI_REAL *const *outputs);
+*/
 
-//type indicatorInfo C.struct_ti_indicator_info
+var (
+	startIndicators = map[string](func([]float64) int){
+		"absStart": AbsStart,
+	}
+)
 
-func foobar() {
+// Start ...
+func Start(indicatorName string, options []float64) int {
+	return startIndicators[indicatorName](options)
+}
 
-	info := C.ti_find_indicator(C.CString("abs"))
+// Do ...
+type Do func(size int, inputs [][]float64, options []float64, outputs [][]float64) int
+
+// AbsStart ...
+func AbsStart(options []float64) int {
+	castOptions := castToDoubleArray(options)
+
+	startResponse := C.ti_abs_start(&castOptions[0])
+
+	return int(startResponse)
+}
+
+func castToDoubleArray(source []float64) []C.double {
+	cast := make([]C.double, 0)
+
+	for v := range source {
+		cast = append(cast, C.double(v))
+	}
+
+	return cast
 }
