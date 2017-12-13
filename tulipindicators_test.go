@@ -30,7 +30,7 @@ func TestCastToCDoubleArray(t *testing.T) {
 		check := (*float64)((unsafe.Pointer(ptrIndex)))
 
 		if *check != v {
-			t.Errorf("Expected value %d at index %d to equal %d", *check, i, v)
+			t.Errorf("Expected value %v at index %d to equal %v", *check, i, v)
 		}
 	}
 }
@@ -61,27 +61,30 @@ func TestCastToC2dDoubleArray(t *testing.T) {
 	}
 }
 
-func TestGet(t *testing.T) {
-	for _, val := range indicatorList {
-		info := Get(val)
+func TestFreeCDoubleArray(t *testing.T) {
+	source := []float64{1.1, 2.2, 3.3, 4.4}
+	newCPtr := castToCDoubleArray(source)
 
-		hasDoIndicator := info.DoIndicator != nil
-		hasStartIndicator := info.StartIndicator != nil
-
-		if !hasDoIndicator {
-			t.Errorf("Expected do indicator for %s", val)
-		}
-
-		if !hasStartIndicator {
-			t.Errorf("Expected start indicator for %s", val)
-		}
-	}
+	freeCDoubleArray(newCPtr)
 }
 
-func TestStart(t *testing.T) {
+func TestFreeC2dDoubleArray(t *testing.T) {
+	source := [][]float64{
+		{1.1, 2.2, 3.3, 4.4},
+		{5.5, 6.6},
+		{7.7, 8.8, 9.9},
+	}
+	newCPtr := castToC2dDoubleArray(source)
+
+	freeC2dDoubleArray(newCPtr, len(source))
+}
+
+func TestGet(t *testing.T) {
 	for _, val := range indicatorList {
-		if startResult, startErr := Start(val, optionsd); startErr != nil {
-			t.Errorf("Got an error from start function %s: %s", val, startErr.Error())
+		var getErr error
+
+		if _, getErr = Get(val); getErr != nil {
+			t.Errorf("Expected to get indicator info for %s", val)
 		}
 	}
 }
@@ -91,7 +94,11 @@ func TestDo(t *testing.T) {
 	size := len(dummyIn)
 
 	for _, val := range indicatorList {
-		info := Get(val)
+		var info IndicatorInfo
+		var getErr error
+		if info, getErr = Get(val); getErr != nil {
+			t.Errorf("Unable to get info for indicator %s.  Did the TestGet function fail here too?", val)
+		}
 
 		inputs := make([][]float64, 0)
 		inputs0 := make([][]float64, 0)
@@ -108,16 +115,29 @@ func TestDo(t *testing.T) {
 			}
 		}
 
-		doResult0, doErr := Do(val, 0, inputs, optionsd, outputs)
-		doResult1, doErr := Do(val, 1, inputs, optionsd, outputs)
-		doResult2, doErr := Do(val, 2, inputs, optionsd, outputs)
-		doResult3, doErr := Do(val, 3, inputs, optionsd, outputs)
-		doResultN, doErr := Do(val, size, inputs, optionsd, outputs)
-		doResultZeros, doErr := Do(val, size, inputs0, optionsd, outputs)
+		args := [](struct {
+			size   int
+			inputs [][]float64
+		}){
+			{0, inputs},
+			{1, inputs},
+			{2, inputs},
+			{3, inputs},
+			{size, inputs},
+			{size, inputs0},
+		}
+
+		for _, argsVal := range args {
+			var doResult int
+			var doErr error
+			var doOutputs [][]float64
+
+			if doResult, doOutputs, doErr = Do(val, argsVal.size, argsVal.inputs, optionsd); doErr != nil {
+				t.Errorf("Error thrown from indicator function %s: %s", val, doErr.Error())
+			}
+
+			t.Logf("Do function returned value %v", doResult)
+		}
 	}
 
-	/* for _, val := range indicatorList {
-
-
-	} */
 }
