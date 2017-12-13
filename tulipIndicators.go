@@ -19,12 +19,12 @@ type indicatorFunc = func(int, [][]float64, []float64) (int, [][]float64, error)
 
 //IndicatorInfo Go implementation of C.struct_ti_indicator_info
 type IndicatorInfo struct {
-	name                                 string
-	fullName                             string
-	indicatorType                        string
-	inputs, options, outputs             int
-	inputNames, optionNames, outputNames []string
-	indicator                            indicatorFunc
+	Name                                 string
+	FullName                             string
+	IndicatorType                        string
+	Inputs, Options, Outputs             int
+	InputNames, OptionNames, OutputNames []string
+	Indicator                            indicatorFunc
 }
 
 var (
@@ -142,6 +142,6 @@ func init() {
 			},
 		}
 
-		Indicators[name] = IndicatorInfos[name].indicator
+		Indicators[name] = IndicatorInfos[name].Indicator
 	}
 }

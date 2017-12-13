@@ -105,12 +105,12 @@ func TestIndicator(t *testing.T) {
 		outputs := make([][]float64, 0)
 
 		for i := 0; i < 10; i++ {
-			if i < info.inputs {
+			if i < info.Inputs {
 				inputs = append(inputs, dummyIn)
 				inputs0 = append(inputs0, dummyIn0)
 			}
 
-			if i < info.inputs {
+			if i < info.Outputs {
 				outputs = append(outputs, dummyOt)
 			}
 		}
