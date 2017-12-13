@@ -22,8 +22,8 @@ const (
 )
 
 var (
-	doIndicators = map[string](func(int, [][]float64, []float64) (int, [][]float64, error)){
-		"abs": Abs,
+	doIndicatorFuncs = map[string](func(int, [][]float64, []float64) (int, [][]float64, error)){
+		"abs": abs,
 	}
 	tiTypes = map[int]string{
 		1: "OVERLAY",     /* These have roughly the same range as the input data. */
@@ -95,8 +95,6 @@ func freeCDoubleArray(source *C.TI_REAL) {
 }
 
 func freeC2dDoubleArray(source **C.TI_REAL, length int) {
-	fmt.Printf("SOURCE %v\n", source)
-
 	for i := 0; i < length; i++ {
 		ptrOuterAddress := uintptr(unsafe.Pointer(source)) + uintptr(C.sizeof_TI_REAL*i)
 		ptrOuter := (*unsafe.Pointer)(unsafe.Pointer(ptrOuterAddress))
@@ -149,35 +147,48 @@ func Get(indicatorName string) (IndicatorInfo, error) {
 		getNames(cIndicatorInfo.input_names),
 		getNames(cIndicatorInfo.option_names),
 		getNames(cIndicatorInfo.output_names),
-		doIndicators[indicatorName],
+		doIndicatorFuncs[indicatorName],
 	}
 
 	return memoizedIndicatorInfo[indicatorName], nil
 }
 
-// Do ...
-func Do(indicatorName string, size int, inputs [][]float64, options []float64) (int, [][]float64, error) {
-	return doIndicators[indicatorName](size, inputs, options)
+// Indicator ...
+func Indicator(indicatorName string, size int, inputs [][]float64, options []float64) (int, [][]float64, error) {
+	var info IndicatorInfo
+	var getErr error
+	if info, getErr = Get(indicatorName); getErr != nil {
+		return 0, [][]float64{}, getErr
+	}
+
+	return info.indicator(size, inputs, options)
 }
 
-// AbsStart ...
-func AbsStart(options []float64) (int, error) {
-	castOptions := castToCDoubleArray(options)
+// Init Initialize the library
+func Init() error {
+	for name := range doIndicatorFuncs {
+		if _, getErr := Get(name); getErr != nil {
+			return getErr
+		}
+	}
 
-	startResponse, startErr := C.ti_abs_start(castOptions)
-
-	return int(startResponse), startErr
+	return nil
 }
 
 // Abs ...
-func Abs(size int, inputs [][]float64, options []float64) (int, [][]float64, error) {
+func abs(size int, inputs [][]float64, options []float64) (int, [][]float64, error) {
 
 	castSize, castInputs, castOptions := castDoParams(size, inputs, options)
 
 	defer freeC2dDoubleArray(castInputs, len(inputs))
 	defer freeCDoubleArray(castOptions)
 
-	info, _ := Get("abs")
+	var info IndicatorInfo
+	var ok bool
+
+	if info, ok = memoizedIndicatorInfo["abs"]; !ok {
+		return 0, [][]float64{}, fmt.Errorf("info hasn't been memoized yet")
+	}
 	outputs := make([][]float64, info.outputs)
 
 	outputSizeDiff := C.ti_abs_start(castOptions)

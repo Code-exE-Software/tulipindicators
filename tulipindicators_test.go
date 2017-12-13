@@ -89,7 +89,7 @@ func TestGet(t *testing.T) {
 	}
 }
 
-func TestDo(t *testing.T) {
+func TestIndicator(t *testing.T) {
 
 	size := len(dummyIn)
 
@@ -132,11 +132,11 @@ func TestDo(t *testing.T) {
 			var doErr error
 			var doOutputs [][]float64
 
-			if doResult, doOutputs, doErr = Do(val, argsVal.size, argsVal.inputs, optionsd); doErr != nil {
+			if doResult, doOutputs, doErr = Indicator(val, argsVal.size, argsVal.inputs, optionsd); doErr != nil {
 				t.Errorf("Error thrown from indicator function %s: %s", val, doErr.Error())
 			}
 
-			t.Logf("Do function returned value %v", doResult)
+			t.Logf("Do function returned value %v %v", doResult, doOutputs)
 		}
 	}
 
