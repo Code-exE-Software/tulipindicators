@@ -40,8 +40,17 @@ func TestCastToC2dDoubleArray(t *testing.T) {
 		{1.1, 2.2, 3.3, 4.4},
 		{5.5, 6.6},
 		{7.7, 8.8, 9.9},
+		{1.1, 2.2, 3.3, 4.4},
+		{5.5, 6.6},
+		{7.7, 8.8, 9.9},
+		{1.1, 2.2, 3.3, 4.4},
+		{5.5, 6.6},
+		{7.7, 8.8, 9.9},
+		{1.1, 2.2, 3.3, 4.4},
+		{5.5, 6.6},
+		{7.7, 8.8, 9.9},
 	}
-	newCPtr := castToC2dDoubleArray(source)
+	newCPtr, source := castToC2dDoubleArray(source)
 
 	//doing naughty things with go because cgo can't be used in tests.
 	for outerIndex, outerVal := range source {
@@ -74,29 +83,20 @@ func TestFreeC2dDoubleArray(t *testing.T) {
 		{5.5, 6.6},
 		{7.7, 8.8, 9.9},
 	}
-	newCPtr := castToC2dDoubleArray(source)
+	newCPtr, source := castToC2dDoubleArray(source)
 
 	freeC2dDoubleArray(newCPtr, len(source))
-}
-
-func TestGet(t *testing.T) {
-	for _, val := range indicatorList {
-		var getErr error
-
-		if _, getErr = Get(val); getErr != nil {
-			t.Errorf("Expected to get indicator info for %s", val)
-		}
-	}
 }
 
 func TestIndicator(t *testing.T) {
 
 	size := len(dummyIn)
 
-	for _, val := range indicatorList {
+	for _, val := range indicatorNames {
 		var info IndicatorInfo
-		var getErr error
-		if info, getErr = Get(val); getErr != nil {
+		var ok bool
+
+		if info, ok = IndicatorInfos[val]; !ok {
 			t.Errorf("Unable to get info for indicator %s.  Did the TestGet function fail here too?", val)
 		}
 
@@ -132,12 +132,11 @@ func TestIndicator(t *testing.T) {
 			var doErr error
 			var doOutputs [][]float64
 
-			if doResult, doOutputs, doErr = Indicator(val, argsVal.size, argsVal.inputs, optionsd); doErr != nil {
+			if doResult, doOutputs, doErr = Indicators[val](argsVal.size, argsVal.inputs, optionsd); doErr != nil {
 				t.Errorf("Error thrown from indicator function %s: %s", val, doErr.Error())
 			}
 
 			t.Logf("Do function returned value %v %v", doResult, doOutputs)
 		}
 	}
-
 }

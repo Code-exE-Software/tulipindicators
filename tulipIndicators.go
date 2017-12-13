@@ -2,6 +2,7 @@ package tulipindicators
 
 // #cgo LDFLAGS: -L./external -lindicators
 // #include <external/indicators.h>
+// #include <stdio.h>
 // #include <stdlib.h>
 import (
 	"C"
@@ -16,7 +17,23 @@ const (
 
 type indicatorFunc = func(int, [][]float64, []float64) (int, [][]float64, error)
 
+//IndicatorInfo Go implementation of C.struct_ti_indicator_info
+type IndicatorInfo struct {
+	name                                 string
+	fullName                             string
+	indicatorType                        string
+	inputs, options, outputs             int
+	inputNames, optionNames, outputNames []string
+	indicator                            indicatorFunc
+}
+
 var (
+	// IndicatorInfos map of structs showing info and requirements for a given indicator.
+	IndicatorInfos = map[string]IndicatorInfo{}
+
+	// Indicators map of functions allowing consumers of this lib to call the indicator functions directly.
+	Indicators = map[string]indicatorFunc{}
+
 	tiTypes = map[int]string{
 		1: "OVERLAY",     /* These have roughly the same range as the input data. */
 		2: "INDICATOR",   /* Everything else (e.g. oscillators). */
@@ -24,14 +41,7 @@ var (
 		4: "SIMPLE",      /* These apply a simple operator (e.g. addition, sin, sqrt). */
 		5: "COMPARITIVE", /* These are designed to take inputs from different securities. i.e. compare stock A to stock B.*/
 	}
-	memoizedIndicatorInfo = map[string]IndicatorInfo{}
 )
-
-func castDoParams(size int, inputs [][]float64, options []float64) (C.int, **C.TI_REAL, *C.TI_REAL) {
-	return C.int(size),
-		castToC2dDoubleArray(inputs),
-		castToCDoubleArray(options)
-}
 
 func castToCDoubleArray(source []float64) *C.TI_REAL {
 	mallocBytes := C.sizeof_TI_REAL * len(source)
@@ -46,7 +56,7 @@ func castToCDoubleArray(source []float64) *C.TI_REAL {
 	return cast
 }
 
-func castToC2dDoubleArray(source [][]float64) **C.TI_REAL {
+func castToC2dDoubleArray(source [][]float64) (**C.TI_REAL, [][]float64) {
 	// per tulipindicators docs, there should never be more than 10 sets of indicator numbers here.
 	validSource := source
 	if len(validSource) > 10 {
@@ -62,14 +72,11 @@ func castToC2dDoubleArray(source [][]float64) **C.TI_REAL {
 	}
 
 	//return cast
-	return &cast[0]
+	return &cast[0], validSource
 }
 
 func extractOutputs(cOutputs **C.double, goOutputs *([][]float64)) {
-	//doing naughty things with go because cgo can't be used in tests.
 	for outerIndex, outerVal := range *goOutputs {
-
-		//@todo I expect this unit test will only work when testing the function on 64 bit systems.
 		ptrOuter := uintptr(unsafe.Pointer(cOutputs)) + uintptr(C.sizeof_TI_REAL*outerIndex)
 
 		for innerIndex := range outerVal {
@@ -106,69 +113,35 @@ func getNames(source [10]*C.char) []string {
 	return result
 }
 
-//IndicatorInfo ..
-type IndicatorInfo struct {
-	name                                 string
-	fullName                             string
-	indicatorType                        string
-	inputs, options, outputs             int
-	inputNames, optionNames, outputNames []string
-	indicator                            indicatorFunc
-}
-
-// Get ...
-func Get(indicatorName string) (IndicatorInfo, error) {
-	if memoizedInfo, ok := memoizedIndicatorInfo[indicatorName]; ok {
-		return memoizedInfo, nil
-	}
-
-	var cIndicatorInfo *C.ti_indicator_info
-	var findErr error
-
-	if cIndicatorInfo, findErr = C.ti_find_indicator(C.CString(indicatorName)); findErr != nil {
-		return IndicatorInfo{}, findErr
-	}
-
-	memoizedIndicatorInfo[indicatorName] = IndicatorInfo{
-		C.GoString(cIndicatorInfo.name),
-		C.GoString(cIndicatorInfo.full_name),
-		tiTypes[int(cIndicatorInfo._type)],
-		int(cIndicatorInfo.inputs),
-		int(cIndicatorInfo.options),
-		int(cIndicatorInfo.outputs),
-		getNames(cIndicatorInfo.input_names),
-		getNames(cIndicatorInfo.option_names),
-		getNames(cIndicatorInfo.output_names),
-		func(size int, inputs [][]float64, options []float64) (int, [][]float64, error) {
-			return indicator(
-				int(cIndicatorInfo.inputs),
-				cIndicatorInfo.start,
-				cIndicatorInfo.indicator,
-				size,
-				inputs,
-				options,
-			)
-		},
-	}
-
-	return memoizedIndicatorInfo[indicatorName], nil
-}
-
-// Indicator ...
-func Indicator(indicatorName string, size int, inputs [][]float64, options []float64) (int, [][]float64, error) {
-	var info IndicatorInfo
-	var getErr error
-	if info, getErr = Get(indicatorName); getErr != nil {
-		return 0, [][]float64{}, getErr
-	}
-
-	return info.indicator(size, inputs, options)
-}
-
 // Init Initialize the library
 func init() {
-	_ := C.ti_indicators
-	/* for name := range doIndicatorFuncs {
-		Get(name)
-	} */
+	var cIndicatorInfo *C.ti_indicator_info
+
+	for _, name := range indicatorNames {
+		cIndicatorInfo = C.ti_find_indicator(C.CString(name))
+
+		IndicatorInfos[name] = IndicatorInfo{
+			C.GoString(cIndicatorInfo.name),
+			C.GoString(cIndicatorInfo.full_name),
+			tiTypes[int(cIndicatorInfo._type)],
+			int(cIndicatorInfo.inputs),
+			int(cIndicatorInfo.options),
+			int(cIndicatorInfo.outputs),
+			getNames(cIndicatorInfo.input_names),
+			getNames(cIndicatorInfo.option_names),
+			getNames(cIndicatorInfo.output_names),
+			func(size int, inputs [][]float64, options []float64) (int, [][]float64, error) {
+				return indicator(
+					int(cIndicatorInfo.inputs),
+					cIndicatorInfo.start,
+					cIndicatorInfo.indicator,
+					size,
+					inputs,
+					options,
+				)
+			},
+		}
+
+		Indicators[name] = IndicatorInfos[name].indicator
+	}
 }
