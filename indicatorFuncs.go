@@ -1,14 +1,51 @@
 package tulipindicators
 
-// #cgo LDFLAGS: -L./external -lindicators
-// #include <external/indicators.h>
+/*
+ #cgo LDFLAGS: -L./external -lindicators
+ #include <external/indicators.h>
+
+ int bridgeStartFunction(ti_indicator_start_function f, TI_REAL const *options) {
+    return f(options);
+ }
+
+ int bridgeIndicatorFunction(ti_indicator_function f,
+    int size,
+    TI_REAL const *const *inputs,
+    TI_REAL const *options,
+    TI_REAL *const *outputs) {
+    return f(size, inputs, options, outputs);
+ }
+*/
 import (
 	"C"
 )
-import "fmt"
+
+var (
+	Abs, Acos, Ad, Add, Adosc, Adx, Adxr, Ao, Apo,
+	Aroon, Aroonosc, Asin, Atan, Atr, Avgprice, Bbands,
+	Bop, Cci, Ceil, Cmo, Cos, Cosh, Crossany, Crossover,
+	Cvi, Decay, Dema, Di, Div, Dm, Dpo, Dx, Edecay, Ema,
+	Emv, Exp, Fisher, Floor, Fosc, Hma, Kama, Kvo, Lag,
+	Linreg, Linregintercept, Linregslope, Ln, Log10, Macd,
+	Marketfi, Mass, Max, Md, Medprice, Mfi, Min, Mom, Msw,
+	Mul, Natr, Nvi, Obv, Ppo, Psar, Pvi, Qstick, Roc, Rocr,
+	Round, Rsi, Sin, Sinh, Sma, Sqrt, Stddev, Stderr, Stoch,
+	Sub, Sum, Tan, Tanh, Tema, Todeg, Torad, Tr, Trima, Trix,
+	Trunc, Tsf, Typprice, Ultosc, Var, Vhf, Vidya, Volatility,
+	Vosc, Vwma, Wad, Wcprice, Wilders, Willr, Wma, Zlema indicatorFunc
+)
 
 /*
-
+   {"abs", "Vector Absolute Value", ti_abs_start, ti_abs, TI_TYPE_SIMPLE, 1, 0, 1, {"real",0}, {"",0}, {"abs",0}},
+   {"acos", "Vector Arccosine", ti_acos_start, ti_acos, TI_TYPE_SIMPLE, 1, 0, 1, {"real",0}, {"",0}, {"acos",0}},
+   {"ad", "Accumulation/Distribution Line", ti_ad_start, ti_ad, TI_TYPE_INDICATOR, 4, 0, 1, {"high","low","close","volume",0}, {"",0}, {"ad",0}},
+   {"add", "Vector Addition", ti_add_start, ti_add, TI_TYPE_SIMPLE, 2, 0, 1, {"real","real",0}, {"",0}, {"add",0}},
+   {"adosc", "Accumulation/Distribution Oscillator", ti_adosc_start, ti_adosc, TI_TYPE_INDICATOR, 4, 2, 1, {"high","low","close","volume",0}, {"short period","long period",0}, {"adosc",0}},
+   {"adx", "Average Directional Movement Index", ti_adx_start, ti_adx, TI_TYPE_INDICATOR, 3, 1, 1, {"high","low","close",0}, {"period",0}, {"dx",0}},
+   {"adxr", "Average Directional Movement Rating", ti_adxr_start, ti_adxr, TI_TYPE_INDICATOR, 3, 1, 1, {"high","low","close",0}, {"period",0}, {"dx",0}},
+   {"ao", "Awesome Oscillator", ti_ao_start, ti_ao, TI_TYPE_INDICATOR, 2, 0, 1, {"high","low",0}, {"",0}, {"ao",0}},
+   {"apo", "Absolute Price Oscillator", ti_apo_start, ti_apo, TI_TYPE_INDICATOR, 1, 2, 1, {"real",0}, {"short period","long period",0}, {"apo",0}},
+   {"aroon", "Aroon", ti_aroon_start, ti_aroon, TI_TYPE_INDICATOR, 2, 1, 2, {"high","low",0}, {"period",0}, {"aroon_down","aroon_up",0}},
    {"aroonosc", "Aroon Oscillator", ti_aroonosc_start, ti_aroonosc, TI_TYPE_INDICATOR, 2, 1, 1, {"high","low",0}, {"period",0}, {"aroonosc",0}},
    {"asin", "Vector Arcsine", ti_asin_start, ti_asin, TI_TYPE_SIMPLE, 1, 0, 1, {"real",0}, {"",0}, {"asin",0}},
    {"atan", "Vector Arctangent", ti_atan_start, ti_atan, TI_TYPE_SIMPLE, 1, 0, 1, {"real",0}, {"",0}, {"atan",0}},
@@ -104,8 +141,14 @@ import "fmt"
    {"zlema", "Zero-Lag Exponential Moving Average", ti_zlema_start, ti_zlema, TI_TYPE_OVERLAY, 1, 1, 1, {"real",0}, {"period",0}, {"zlema",0}},
 */
 
-func abs(size int, inputs [][]float64, options []float64) (int, [][]float64, error) {
-
+func indicator(
+	numOutputs int,
+	startFunc /* unsafe.Pointer, */ C.ti_indicator_start_function,
+	indicatorFunc /* unsafe.Pointer, */ C.ti_indicator_function,
+	size int,
+	inputs [][]float64,
+	options []float64,
+) (int, [][]float64, error) {
 	castSize, castInputs, castOptions := castDoParams(size, inputs, options)
 
 	defer freeC2dDoubleArray(castInputs, len(inputs))
@@ -114,12 +157,10 @@ func abs(size int, inputs [][]float64, options []float64) (int, [][]float64, err
 	var info IndicatorInfo
 	var ok bool
 
-	if info, ok = memoizedIndicatorInfo["abs"]; !ok {
-		return 0, [][]float64{}, fmt.Errorf("info hasn't been memoized yet")
-	}
-	outputs := make([][]float64, info.outputs)
+	outputs := make([][]float64, numOutputs)
 
-	outputSizeDiff := C.ti_abs_start(castOptions)
+	//outputSizeDiff := startFunc(castOptions)
+	outputSizeDiff := C.bridgeStartFunction(C.ti_indicator_start_function(startFunc), castOptions)
 
 	for i := range outputs {
 		outputs[i] = make([]float64, len(inputs[i])-int(outputSizeDiff))
@@ -129,297 +170,127 @@ func abs(size int, inputs [][]float64, options []float64) (int, [][]float64, err
 
 	defer freeC2dDoubleArray(castOutputs, len(outputs))
 
-	doResponse, doError := C.ti_abs(castSize, castInputs, castOptions, castOutputs)
+	//doResponse, doError := indicatorFunc(castSize, castInputs, castOptions, castOutputs)
+	doResponse, doError := C.bridgeIndicatorFunction(
+		C.ti_indicator_function(indicatorFunc),
+		castSize,
+		castInputs,
+		castOptions,
+		castOutputs,
+	)
 
 	extractOutputs(castOutputs, &outputs)
 
 	return int(doResponse), outputs, doError
 }
 
-func acos(size int, inputs [][]float64, options []float64) (int, [][]float64, error) {
+/* func Abs(size int, inputs [][]float64, options []float64) (int, [][]float64, error) {
+	return indicator(
+		"abs",
+		C.ti_abs_start,
+		C.ti_abs,
+		size,
+		inputs,
+		options,
+	)
+}
 
-	castSize, castInputs, castOptions := castDoParams(size, inputs, options)
-
-	defer freeC2dDoubleArray(castInputs, len(inputs))
-	defer freeCDoubleArray(castOptions)
-
-	var info IndicatorInfo
-	var ok bool
-
-	if info, ok = memoizedIndicatorInfo["acos"]; !ok {
-		return 0, [][]float64{}, fmt.Errorf("info hasn't been memoized yet")
-	}
-	outputs := make([][]float64, info.outputs)
-
-	outputSizeDiff := C.ti_acos_start(castOptions)
-
-	for i := range outputs {
-		outputs[i] = make([]float64, len(inputs[i])-int(outputSizeDiff))
-	}
-
-	castOutputs := castToC2dDoubleArray(outputs)
-
-	defer freeC2dDoubleArray(castOutputs, len(outputs))
-
-	doResponse, doError := C.ti_acos(castSize, castInputs, castOptions, castOutputs)
-
-	extractOutputs(castOutputs, &outputs)
-
-	return int(doResponse), outputs, doError
+func Acos(size int, inputs [][]float64, options []float64) (int, [][]float64, error) {
+	return indicator(
+		"acos",
+		C.ti_acos_start,
+		C.ti_acos,
+		size,
+		inputs,
+		options,
+	)
 }
 
 func ad(size int, inputs [][]float64, options []float64) (int, [][]float64, error) {
-
-	castSize, castInputs, castOptions := castDoParams(size, inputs, options)
-
-	defer freeC2dDoubleArray(castInputs, len(inputs))
-	defer freeCDoubleArray(castOptions)
-
-	var info IndicatorInfo
-	var ok bool
-
-	if info, ok = memoizedIndicatorInfo["ad"]; !ok {
-		return 0, [][]float64{}, fmt.Errorf("info hasn't been memoized yet")
-	}
-	outputs := make([][]float64, info.outputs)
-
-	outputSizeDiff := C.ti_ad_start(castOptions)
-
-	for i := range outputs {
-		outputs[i] = make([]float64, len(inputs[i])-int(outputSizeDiff))
-	}
-
-	castOutputs := castToC2dDoubleArray(outputs)
-
-	defer freeC2dDoubleArray(castOutputs, len(outputs))
-
-	doResponse, doError := C.ti_ad(castSize, castInputs, castOptions, castOutputs)
-
-	extractOutputs(castOutputs, &outputs)
-
-	return int(doResponse), outputs, doError
+	return indicator(
+		"ad",
+		C.ti_ad_start,
+		C.ti_ad,
+		size,
+		inputs,
+		options,
+	)
 }
 
 func add(size int, inputs [][]float64, options []float64) (int, [][]float64, error) {
-
-	castSize, castInputs, castOptions := castDoParams(size, inputs, options)
-
-	defer freeC2dDoubleArray(castInputs, len(inputs))
-	defer freeCDoubleArray(castOptions)
-
-	var info IndicatorInfo
-	var ok bool
-
-	if info, ok = memoizedIndicatorInfo["add"]; !ok {
-		return 0, [][]float64{}, fmt.Errorf("info hasn't been memoized yet")
-	}
-	outputs := make([][]float64, info.outputs)
-
-	outputSizeDiff := C.ti_add_start(castOptions)
-
-	for i := range outputs {
-		outputs[i] = make([]float64, len(inputs[i])-int(outputSizeDiff))
-	}
-
-	castOutputs := castToC2dDoubleArray(outputs)
-
-	defer freeC2dDoubleArray(castOutputs, len(outputs))
-
-	doResponse, doError := C.ti_add(castSize, castInputs, castOptions, castOutputs)
-
-	extractOutputs(castOutputs, &outputs)
-
-	return int(doResponse), outputs, doError
+	return indicator(
+		"add",
+		C.ti_add_start,
+		C.ti_add,
+		size,
+		inputs,
+		options,
+	)
 }
 
 func adosc(size int, inputs [][]float64, options []float64) (int, [][]float64, error) {
-
-	castSize, castInputs, castOptions := castDoParams(size, inputs, options)
-
-	defer freeC2dDoubleArray(castInputs, len(inputs))
-	defer freeCDoubleArray(castOptions)
-
-	var info IndicatorInfo
-	var ok bool
-
-	if info, ok = memoizedIndicatorInfo["adosc"]; !ok {
-		return 0, [][]float64{}, fmt.Errorf("info hasn't been memoized yet")
-	}
-	outputs := make([][]float64, info.outputs)
-
-	outputSizeDiff := C.ti_adosc_start(castOptions)
-
-	for i := range outputs {
-		outputs[i] = make([]float64, len(inputs[i])-int(outputSizeDiff))
-	}
-
-	castOutputs := castToC2dDoubleArray(outputs)
-
-	defer freeC2dDoubleArray(castOutputs, len(outputs))
-
-	doResponse, doError := C.ti_adosc(castSize, castInputs, castOptions, castOutputs)
-
-	extractOutputs(castOutputs, &outputs)
-
-	return int(doResponse), outputs, doError
+	return indicator(
+		"adosc",
+		C.ti_adosc_start,
+		C.ti_adosc,
+		size,
+		inputs,
+		options,
+	)
 }
 
 func adx(size int, inputs [][]float64, options []float64) (int, [][]float64, error) {
-
-	castSize, castInputs, castOptions := castDoParams(size, inputs, options)
-
-	defer freeC2dDoubleArray(castInputs, len(inputs))
-	defer freeCDoubleArray(castOptions)
-
-	var info IndicatorInfo
-	var ok bool
-
-	if info, ok = memoizedIndicatorInfo["adx"]; !ok {
-		return 0, [][]float64{}, fmt.Errorf("info hasn't been memoized yet")
-	}
-	outputs := make([][]float64, info.outputs)
-
-	outputSizeDiff := C.ti_adx_start(castOptions)
-
-	for i := range outputs {
-		outputs[i] = make([]float64, len(inputs[i])-int(outputSizeDiff))
-	}
-
-	castOutputs := castToC2dDoubleArray(outputs)
-
-	defer freeC2dDoubleArray(castOutputs, len(outputs))
-
-	doResponse, doError := C.ti_adx(castSize, castInputs, castOptions, castOutputs)
-
-	extractOutputs(castOutputs, &outputs)
-
-	return int(doResponse), outputs, doError
+	return indicator(
+		"adx",
+		C.ti_adx_start,
+		C.ti_adx,
+		size,
+		inputs,
+		options,
+	)
 }
 
 func adxr(size int, inputs [][]float64, options []float64) (int, [][]float64, error) {
-
-	castSize, castInputs, castOptions := castDoParams(size, inputs, options)
-
-	defer freeC2dDoubleArray(castInputs, len(inputs))
-	defer freeCDoubleArray(castOptions)
-
-	var info IndicatorInfo
-	var ok bool
-
-	if info, ok = memoizedIndicatorInfo["adxr"]; !ok {
-		return 0, [][]float64{}, fmt.Errorf("info hasn't been memoized yet")
-	}
-	outputs := make([][]float64, info.outputs)
-
-	outputSizeDiff := C.ti_adxr_start(castOptions)
-
-	for i := range outputs {
-		outputs[i] = make([]float64, len(inputs[i])-int(outputSizeDiff))
-	}
-
-	castOutputs := castToC2dDoubleArray(outputs)
-
-	defer freeC2dDoubleArray(castOutputs, len(outputs))
-
-	doResponse, doError := C.ti_adxr(castSize, castInputs, castOptions, castOutputs)
-
-	extractOutputs(castOutputs, &outputs)
-
-	return int(doResponse), outputs, doError
+	return indicator(
+		"adxr",
+		C.ti_adxr_start,
+		C.ti_adxr,
+		size,
+		inputs,
+		options,
+	)
 }
 
 func ao(size int, inputs [][]float64, options []float64) (int, [][]float64, error) {
-
-	castSize, castInputs, castOptions := castDoParams(size, inputs, options)
-
-	defer freeC2dDoubleArray(castInputs, len(inputs))
-	defer freeCDoubleArray(castOptions)
-
-	var info IndicatorInfo
-	var ok bool
-
-	if info, ok = memoizedIndicatorInfo["ao"]; !ok {
-		return 0, [][]float64{}, fmt.Errorf("info hasn't been memoized yet")
-	}
-	outputs := make([][]float64, info.outputs)
-
-	outputSizeDiff := C.ti_ao_start(castOptions)
-
-	for i := range outputs {
-		outputs[i] = make([]float64, len(inputs[i])-int(outputSizeDiff))
-	}
-
-	castOutputs := castToC2dDoubleArray(outputs)
-
-	defer freeC2dDoubleArray(castOutputs, len(outputs))
-
-	doResponse, doError := C.ti_ao(castSize, castInputs, castOptions, castOutputs)
-
-	extractOutputs(castOutputs, &outputs)
-
-	return int(doResponse), outputs, doError
+	return indicator(
+		"ao",
+		C.ti_ao_start,
+		C.ti_ao,
+		size,
+		inputs,
+		options,
+	)
 }
 
 func apo(size int, inputs [][]float64, options []float64) (int, [][]float64, error) {
-
-	castSize, castInputs, castOptions := castDoParams(size, inputs, options)
-
-	defer freeC2dDoubleArray(castInputs, len(inputs))
-	defer freeCDoubleArray(castOptions)
-
-	var info IndicatorInfo
-	var ok bool
-
-	if info, ok = memoizedIndicatorInfo["apo"]; !ok {
-		return 0, [][]float64{}, fmt.Errorf("info hasn't been memoized yet")
-	}
-	outputs := make([][]float64, info.outputs)
-
-	outputSizeDiff := C.ti_apo_start(castOptions)
-
-	for i := range outputs {
-		outputs[i] = make([]float64, len(inputs[i])-int(outputSizeDiff))
-	}
-
-	castOutputs := castToC2dDoubleArray(outputs)
-
-	defer freeC2dDoubleArray(castOutputs, len(outputs))
-
-	doResponse, doError := C.ti_apo(castSize, castInputs, castOptions, castOutputs)
-
-	extractOutputs(castOutputs, &outputs)
-
-	return int(doResponse), outputs, doError
+	return indicator(
+		"apo",
+		C.ti_apo_start,
+		C.ti_apo,
+		size,
+		inputs,
+		options,
+	)
 }
 
 func aroon(size int, inputs [][]float64, options []float64) (int, [][]float64, error) {
-
-	castSize, castInputs, castOptions := castDoParams(size, inputs, options)
-
-	defer freeC2dDoubleArray(castInputs, len(inputs))
-	defer freeCDoubleArray(castOptions)
-
-	var info IndicatorInfo
-	var ok bool
-
-	if info, ok = memoizedIndicatorInfo["aroon"]; !ok {
-		return 0, [][]float64{}, fmt.Errorf("info hasn't been memoized yet")
-	}
-	outputs := make([][]float64, info.outputs)
-
-	outputSizeDiff := C.ti_aroon_start(castOptions)
-
-	for i := range outputs {
-		outputs[i] = make([]float64, len(inputs[i])-int(outputSizeDiff))
-	}
-
-	castOutputs := castToC2dDoubleArray(outputs)
-
-	defer freeC2dDoubleArray(castOutputs, len(outputs))
-
-	doResponse, doError := C.ti_aroon(castSize, castInputs, castOptions, castOutputs)
-
-	extractOutputs(castOutputs, &outputs)
-
-	return int(doResponse), outputs, doError
+	return indicator(
+		"aroon",
+		C.ti_aroon_start,
+		C.ti_aroon,
+		size,
+		inputs,
+		options,
+	)
 }
+*/

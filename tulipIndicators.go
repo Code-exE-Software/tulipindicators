@@ -14,10 +14,9 @@ const (
 	maxIndicators = 10
 )
 
+type indicatorFunc = func(int, [][]float64, []float64) (int, [][]float64, error)
+
 var (
-	doIndicatorFuncs = map[string](func(int, [][]float64, []float64) (int, [][]float64, error)){
-		"abs": abs,
-	}
 	tiTypes = map[int]string{
 		1: "OVERLAY",     /* These have roughly the same range as the input data. */
 		2: "INDICATOR",   /* Everything else (e.g. oscillators). */
@@ -114,7 +113,7 @@ type IndicatorInfo struct {
 	indicatorType                        string
 	inputs, options, outputs             int
 	inputNames, optionNames, outputNames []string
-	indicator                            (func(int, [][]float64, []float64) (int, [][]float64, error))
+	indicator                            indicatorFunc
 }
 
 // Get ...
@@ -140,7 +139,16 @@ func Get(indicatorName string) (IndicatorInfo, error) {
 		getNames(cIndicatorInfo.input_names),
 		getNames(cIndicatorInfo.option_names),
 		getNames(cIndicatorInfo.output_names),
-		doIndicatorFuncs[indicatorName],
+		func(size int, inputs [][]float64, options []float64) (int, [][]float64, error) {
+			return indicator(
+				int(cIndicatorInfo.inputs),
+				cIndicatorInfo.start,
+				cIndicatorInfo.indicator,
+				size,
+				inputs,
+				options,
+			)
+		},
 	}
 
 	return memoizedIndicatorInfo[indicatorName], nil
@@ -158,12 +166,9 @@ func Indicator(indicatorName string, size int, inputs [][]float64, options []flo
 }
 
 // Init Initialize the library
-func Init() error {
-	for name := range doIndicatorFuncs {
-		if _, getErr := Get(name); getErr != nil {
-			return getErr
-		}
-	}
-
-	return nil
+func init() {
+	_ := C.ti_indicators
+	/* for name := range doIndicatorFuncs {
+		Get(name)
+	} */
 }
