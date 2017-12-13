@@ -7,16 +7,9 @@ import (
 	"C"
 )
 import (
-	"fmt"
 	"unsafe"
 )
 
-/*int ti_abs_start(TI_REAL const *options);
-int ti_abs(int size,
-      TI_REAL const *const *inputs,
-      TI_REAL const *options,
-      TI_REAL *const *outputs);
-*/
 const (
 	maxIndicators = 10
 )
@@ -173,37 +166,4 @@ func Init() error {
 	}
 
 	return nil
-}
-
-// Abs ...
-func abs(size int, inputs [][]float64, options []float64) (int, [][]float64, error) {
-
-	castSize, castInputs, castOptions := castDoParams(size, inputs, options)
-
-	defer freeC2dDoubleArray(castInputs, len(inputs))
-	defer freeCDoubleArray(castOptions)
-
-	var info IndicatorInfo
-	var ok bool
-
-	if info, ok = memoizedIndicatorInfo["abs"]; !ok {
-		return 0, [][]float64{}, fmt.Errorf("info hasn't been memoized yet")
-	}
-	outputs := make([][]float64, info.outputs)
-
-	outputSizeDiff := C.ti_abs_start(castOptions)
-
-	for i := range outputs {
-		outputs[i] = make([]float64, len(inputs[i])-int(outputSizeDiff))
-	}
-
-	castOutputs := castToC2dDoubleArray(outputs)
-
-	defer freeC2dDoubleArray(castOutputs, len(outputs))
-
-	doResponse, doError := C.ti_abs(castSize, castInputs, castOptions, castOutputs)
-
-	extractOutputs(castOutputs, &outputs)
-
-	return int(doResponse), outputs, doError
 }
