@@ -45,6 +45,7 @@ func test() {
 	fmt.Printf("Output values: %v", sampleOutputs)
 
 	//if `err` here isn't nil, that most likely means there was an error in the interaction with the c code.
+
 	fmt.Printf("Error: %v", err)
 }
 
