@@ -21,7 +21,7 @@ var (
 )
 
 func TestCastToCDoubleArray(t *testing.T) {
-	source := []float64{1.1, 2.2, 3.3, 4.4}
+	source := optionsd //[]float64{1.1, 2.2, 3.3, 4.4}
 	newCPtr := castToCDoubleArray(source)
 
 	for i, v := range source {
@@ -128,15 +128,40 @@ func TestIndicator(t *testing.T) {
 		}
 
 		for _, argsVal := range args {
-			var doResult int
 			var doErr error
 			var doOutputs [][]float64
 
-			if doResult, doOutputs, doErr = Indicators[val](argsVal.size, argsVal.inputs, optionsd); doErr != nil {
+			if doOutputs, doErr = Indicators[val](argsVal.inputs, optionsd); doErr != nil {
 				t.Errorf("Error thrown from indicator function %s: %s", val, doErr.Error())
+				break
 			}
 
-			t.Logf("Do function returned value %v %v", doResult, doOutputs)
+			t.Logf("Do function for %s returned value %v", val, doOutputs)
+		}
+	}
+}
+
+func TestIndicatorNoOptions(t *testing.T) {
+
+	numEntries := 10 /* * 24 */
+
+	inputs := append(make([][]float64, 0), make([]float64, numEntries))
+
+	for i := 0; i < numEntries; i++ {
+		inputs[0][i] = float64(i * -1)
+	}
+
+	var outputs [][]float64
+	var err error
+
+	if outputs, err = Indicators["abs"](inputs, nil); err != nil {
+		t.Errorf("ERRRRRR %v \n", err)
+		return
+	}
+
+	for i := 0; i < numEntries; i++ {
+		if outputs[0][i] != float64(i) {
+			t.Errorf("Bad output %d expected %d", outputs[0][i], float64(i))
 		}
 	}
 }
