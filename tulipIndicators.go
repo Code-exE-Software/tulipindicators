@@ -8,6 +8,8 @@ import (
 	"C"
 )
 import (
+	"bytes"
+	"encoding/binary"
 	"unsafe"
 )
 
@@ -15,7 +17,7 @@ const (
 	maxIndicators = 10
 )
 
-type indicatorFunc = func(int, [][]float64, []float64) (int, [][]float64, error)
+type indicatorFunc = func([][]float64, []float64) ([][]float64, error)
 
 //IndicatorInfo Go implementation of C.struct_ti_indicator_info
 type IndicatorInfo struct {
@@ -44,7 +46,10 @@ var (
 )
 
 func castToCDoubleArray(source []float64) *C.TI_REAL {
-	mallocBytes := C.sizeof_TI_REAL * len(source)
+	buf := new(bytes.Buffer)
+	binary.Write(buf, binary.LittleEndian, source)
+	return (*C.TI_REAL)(C.CBytes(buf.Bytes()))
+	/* mallocBytes := C.sizeof_TI_REAL * len(source)
 	cast := (*C.TI_REAL)(C.malloc(C.size_t(mallocBytes)))
 
 	for index, val := range source {
@@ -53,7 +58,14 @@ func castToCDoubleArray(source []float64) *C.TI_REAL {
 		castAtIndex := (*C.double)(unsafe.Pointer(ptrIndex))
 		*castAtIndex = ((C.double)(val))
 	}
-	return cast
+	return cast */
+	//return *C.TI_REAL(&)
+}
+
+func castToDoubleArrayPtr(source []float64) unsafe.Pointer {
+	buf := new(bytes.Buffer)
+	binary.Write(buf, binary.LittleEndian, source)
+	return C.CBytes(buf.Bytes())
 }
 
 func castToC2dDoubleArray(source [][]float64) (**C.TI_REAL, [][]float64) {
@@ -75,18 +87,19 @@ func castToC2dDoubleArray(source [][]float64) (**C.TI_REAL, [][]float64) {
 	return &cast[0], validSource
 }
 
-func extractOutputs(cOutputs **C.double, goOutputs *([][]float64)) {
-	for outerIndex, outerVal := range *goOutputs {
+func extractOutputs(cOutputs **C.double, goOutputs [][]float64) [][]float64 {
+	for outerIndex, outerVal := range goOutputs {
 		ptrOuter := uintptr(unsafe.Pointer(cOutputs)) + uintptr(C.sizeof_TI_REAL*outerIndex)
 
-		for innerIndex := range outerVal {
+		for innerIndex, _ := range outerVal {
 			ptrInner := (*unsafe.Pointer)(unsafe.Pointer(ptrOuter))
 			ptrInnerIndex := uintptr(*ptrInner) + uintptr(C.sizeof_TI_REAL*innerIndex)
 			val := (*float64)((unsafe.Pointer(ptrInnerIndex)))
-
-			(*goOutputs)[outerIndex][innerIndex] = *val
+			goOutputs[outerIndex][innerIndex] = *val
 		}
 	}
+
+	return goOutputs
 }
 
 func freeCDoubleArray(source *C.TI_REAL) {
@@ -119,7 +132,6 @@ func init() {
 
 	for _, name := range indicatorNames {
 		cIndicatorInfo = C.ti_find_indicator(C.CString(name))
-
 		IndicatorInfos[name] = IndicatorInfo{
 			C.GoString(cIndicatorInfo.name),
 			C.GoString(cIndicatorInfo.full_name),
@@ -130,16 +142,17 @@ func init() {
 			getNames(cIndicatorInfo.input_names),
 			getNames(cIndicatorInfo.option_names),
 			getNames(cIndicatorInfo.output_names),
-			func(size int, inputs [][]float64, options []float64) (int, [][]float64, error) {
-				return indicator(
-					int(cIndicatorInfo.inputs),
-					cIndicatorInfo.start,
-					cIndicatorInfo.indicator,
-					size,
-					inputs,
-					options,
-				)
-			},
+			func(closureIndicatorInfo *C.ti_indicator_info) indicatorFunc {
+				return func(inputs [][]float64, options []float64) ([][]float64, error) {
+					return indicator(
+						int(closureIndicatorInfo.outputs),
+						closureIndicatorInfo.start,
+						closureIndicatorInfo.indicator,
+						inputs,
+						options,
+					)
+				}
+			}(cIndicatorInfo),
 		}
 
 		Indicators[name] = IndicatorInfos[name].Indicator
