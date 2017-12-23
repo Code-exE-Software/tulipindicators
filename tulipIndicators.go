@@ -49,23 +49,6 @@ func castToCDoubleArray(source []float64) *C.TI_REAL {
 	buf := new(bytes.Buffer)
 	binary.Write(buf, binary.LittleEndian, source)
 	return (*C.TI_REAL)(C.CBytes(buf.Bytes()))
-	/* mallocBytes := C.sizeof_TI_REAL * len(source)
-	cast := (*C.TI_REAL)(C.malloc(C.size_t(mallocBytes)))
-
-	for index, val := range source {
-		offset := index * C.sizeof_TI_REAL
-		ptrIndex := uintptr(unsafe.Pointer(cast)) + uintptr(offset)
-		castAtIndex := (*C.double)(unsafe.Pointer(ptrIndex))
-		*castAtIndex = ((C.double)(val))
-	}
-	return cast */
-	//return *C.TI_REAL(&)
-}
-
-func castToDoubleArrayPtr(source []float64) unsafe.Pointer {
-	buf := new(bytes.Buffer)
-	binary.Write(buf, binary.LittleEndian, source)
-	return C.CBytes(buf.Bytes())
 }
 
 func castToC2dDoubleArray(source [][]float64) (**C.TI_REAL, [][]float64) {
