@@ -30,22 +30,18 @@ import (
 func test() {
 	sampleInputs := []float64{-1.1, -2.2, -3.3}
 	sampleOptions := []float64{}
-	sampleSize := len(sampleInputs)
 
-	resultCode, sampleOutputs, err:= tulipindicators.Indicators["abs"](
-		sampleSize,
+	sampleOutputs, err:= tulipindicators.Indicators["abs"](
 		[][]float64{sampleInputs},
 		sampleOptions,
 	)
-	//resultCode is going to be either 0 (TI_OKAY) or 1 (TI_INVALID_OPTION)
-	fmt.Printf("Result Code is: %d", resultCode)
 	
 	//sampleOutputs is always going to be a [][]float64.
 	//this should output [[1.1, 2.2, 3.3]]
 	fmt.Printf("Output values: %v", sampleOutputs)
 
-	//if `err` here isn't nil, that most likely means there was an error in the interaction with the c code.
-
+	//if the c code would result in returning 1 (TI_INVALID_OPTION), this presents in the 'err' result.
+	//err will also indicate if there were insufficient inputs (where funky things with 'start' and negative numbers happen)
 	fmt.Printf("Error: %v", err)
 }
 
@@ -74,5 +70,4 @@ func test() {
 * Raise an issue here (preferred), or email me with 'tulipindicators' in the subject.
 
 ### Todo ###
-* Evaluate whether the size parameter is even something that should be exposed.
 * More examples!  (Feel free to make a PR just for that!)
