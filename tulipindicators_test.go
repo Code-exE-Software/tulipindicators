@@ -1,6 +1,12 @@
 package tulipindicators
 
 import (
+	"bytes"
+	"encoding/csv"
+	"fmt"
+	"io/ioutil"
+	"math/big"
+	"os"
 	"testing"
 	"unsafe"
 )
@@ -163,5 +169,49 @@ func TestIndicatorNoOptions(t *testing.T) {
 		if outputs[0][i] != float64(i) {
 			t.Errorf("Bad output %d expected %d", outputs[0][i], float64(i))
 		}
+	}
+}
+
+/*
+TestBBandIndicator was written because I discovered the following error:
+The process cannot access the file because another process has locked a portion of the file.
+*/
+func TestBBandIndicator(t *testing.T) {
+	fileName := fmt.Sprintf(".%sindicatorTestData%sbband_BTC-CFI_fiveMin.csv", string(os.PathSeparator), string(os.PathSeparator))
+
+	var fileData []byte
+	var readErr error
+
+	if fileData, readErr = ioutil.ReadFile(fileName); readErr != nil {
+		t.Error(readErr)
+		return
+	}
+
+	fileDataBuf := new(bytes.Buffer)
+	fileDataBuf.Write(fileData)
+
+	fileReader := csv.NewReader(fileDataBuf)
+
+	var rows [][]string
+	var csvErr error
+
+	if rows, csvErr = fileReader.ReadAll(); csvErr != nil {
+		t.Error(csvErr)
+		return
+	}
+
+	values := rows[0][len(rows[0])-100:]
+
+	inputs := make([]float64, len(values))
+
+	for i, val := range values {
+		bigFloat, _, _ := big.ParseFloat(val, 10, 53, big.ToNearestEven)
+
+		inputs[i], _ = bigFloat.Float64()
+	}
+
+	if _, err := Indicators["bbands"]([][]float64{inputs}, []float64{18, 2}); err != nil {
+		t.Error(err)
+		return
 	}
 }
