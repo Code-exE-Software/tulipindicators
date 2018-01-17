@@ -15,7 +15,15 @@ package tulipindicators
     TI_REAL const *const *inputs,
     TI_REAL const *options,
     TI_REAL *const *outputs) {
-    return f(size, inputs, options, outputs);
+		printf("why?");
+		int result = f(size, inputs, options, outputs);
+
+		char outputstr[25];
+		sprintf(outputstr, "%d", result);
+		printf(outputstr);
+		printf("\n");
+		//return 5;
+		return result;
  }
 */
 import (
@@ -32,13 +40,14 @@ func indicator(
 	inputs [][]float64,
 	options []float64,
 ) ([][]float64, error) {
+
 	castOptions := castToCDoubleArray(options)
 	defer freeCDoubleArray(castOptions)
 
 	castInputs, inputs := castToC2dDoubleArray(inputs)
 	defer freeC2dDoubleArray(castInputs, len(inputs))
 
-	outputSizeDiff := C.bridgeStartFunction(C.ti_indicator_start_function(startFunc), castOptions)
+	outputSizeDiff := C.bridgeStartFunction(startFunc, castOptions)
 
 	outputSize := len(inputs[0]) - int(outputSizeDiff)
 
@@ -55,16 +64,19 @@ func indicator(
 	castOutputs, outputs := castToC2dDoubleArray(outputs)
 	defer freeC2dDoubleArray(castOutputs, len(outputs))
 
+	castOutputSize := C.int(outputSize)
+
 	doResponse, doError := C.bridgeIndicatorFunction(
-		C.ti_indicator_function(indicatorFunc),
-		C.int(outputSize),
+		indicatorFunc,
+		castOutputSize,
 		castInputs,
 		castOptions,
 		castOutputs,
 	)
 
 	if doError != nil {
-		return nil, doError
+		fmt.Printf("Windows error generated here:   \n%v\n%v\n", indicatorFunc, doResponse)
+		//return nil, doError //skipping error because the output *is* actually valid.  SCARY
 	}
 
 	if doResponse == C.TI_INVALID_OPTION {
