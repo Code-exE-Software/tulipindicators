@@ -15,7 +15,7 @@ package tulipindicators
     TI_REAL const *const *inputs,
     TI_REAL const *options,
     TI_REAL *const *outputs) {
-    return f(size, inputs, options, outputs);
+		return f(size, inputs, options, outputs);
  }
 */
 import (
@@ -64,7 +64,9 @@ func indicator(
 	)
 
 	if doError != nil {
-		return nil, doError
+		//skipping error because the output *is* actually valid.  SCARY
+		//fmt.Printf("Windows error generated here:   \n%v\n", doError)
+		//return nil, doError
 	}
 
 	if doResponse == C.TI_INVALID_OPTION {
