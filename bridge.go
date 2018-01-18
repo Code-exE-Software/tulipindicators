@@ -15,15 +15,16 @@ package tulipindicators
     TI_REAL const *const *inputs,
     TI_REAL const *options,
     TI_REAL *const *outputs) {
-		printf("why?");
-		int result = f(size, inputs, options, outputs);
+		// printf("why?");
+		// int result = f(size, inputs, options, outputs);
 
-		char outputstr[25];
-		sprintf(outputstr, "%d", result);
-		printf(outputstr);
-		printf("\n");
-		//return 5;
-		return result;
+		// char outputstr[25];
+		// sprintf(outputstr, "%d", result);
+		// printf(outputstr);
+		// printf("\n");
+		// //return 5;
+		// return result;
+		return sqrt(-5);
  }
 */
 import (
@@ -75,7 +76,7 @@ func indicator(
 	)
 
 	if doError != nil {
-		fmt.Printf("Windows error generated here:   \n%v\n%v\n", indicatorFunc, doResponse)
+		fmt.Printf("Windows error generated here: \n%v\n", doError)
 		//return nil, doError //skipping error because the output *is* actually valid.  SCARY
 	}
 
