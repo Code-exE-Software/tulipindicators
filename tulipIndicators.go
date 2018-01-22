@@ -1,9 +1,10 @@
 package tulipindicators
 
-// #cgo LDFLAGS: -L./external -lindicators
-// #include <external/indicators.h>
-// #include <stdio.h>
-// #include <stdlib.h>
+/*
+#include <stdio.h>
+#include <stdlib.h>
+#include "external/indicators.h"
+*/
 import (
 	"C"
 )

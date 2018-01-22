@@ -1,8 +1,7 @@
 package tulipindicators
 
 /*
- #cgo LDFLAGS: -L./external -lindicators
- #include <external/indicators.h>
+ #include "external/indicators.h"
  #include <stdio.h>
 
  int bridgeStartFunction(ti_indicator_start_function f, TI_REAL const *options) {
