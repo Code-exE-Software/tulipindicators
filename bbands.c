@@ -22,9 +22,6 @@
  */
 
 #include "indicators.h"
-#include <stdio.h>
-
-
 
 int ti_bbands_start(TI_REAL const *options) {
     return (int)options[0]-1;
@@ -56,10 +53,6 @@ int ti_bbands(int size, TI_REAL const *const *inputs, TI_REAL const *options, TI
 
     TI_REAL sdSource = (sum2 * scale - (sum * scale) * (sum * scale));
 
-    if (sdSource < 0) {
-        printf("trying to find sqrt of neg number! %f", sdSource);
-    }
-
     TI_REAL sd = sqrt(sdSource);
 
     *middle = sum * scale;
@@ -75,11 +68,7 @@ int ti_bbands(int size, TI_REAL const *const *inputs, TI_REAL const *options, TI
         sum2 -= input[i-period] * input[i-period];
 
         sdSource = (sum2 * scale - (sum * scale) * (sum * scale));
-
-        if (sdSource < 0) {
-            printf("trying to find sqrt of neg number... AGAIN! %f", sdSource);
-        }
-
+        
         sd = sqrt(sdSource);
         *middle = sum * scale;
         *upper++ = *middle + stddev * sd;
