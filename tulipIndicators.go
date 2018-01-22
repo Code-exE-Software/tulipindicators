@@ -3,7 +3,7 @@ package tulipindicators
 /*
 #include <stdio.h>
 #include <stdlib.h>
-#include "external/indicators.h"
+#include "indicators.h"
 */
 import (
 	"C"
