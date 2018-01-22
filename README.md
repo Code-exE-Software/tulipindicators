@@ -52,13 +52,9 @@ func test() {
 
 * Go (with specific attention paid to CGO)
 * I developed this on a 64 bit Windows 10 machine.  I've tried my best to not do anything Windows-specific here, but if I've goofed in that regard, lemme know!
-* The main source of this repo uses a version of the tulipindicator c lib compiled on Windows 10 using MinGW 5.3 (found at https://github.com/technicalviking/tiLibWinFork).  I'm hoping that anyone consuming this go lib on a non-windows system won't have a problem with that, but if you do:
-	* Clone this repo
-	* Clone the original tulipindicators repo (https://github.com/TulipCharts/tulipindicators)
-	* Compile the tulipindicators lib using an ansi C compiler (as per their readme)
-	* Copy the resulting libindicators.a file into the go project under the 'external' directory
-	* Run `go build`
-	* Import that version of the go package into your project.
+* The main source of this repo takes advantage of an aspect of go where if the "C" pseudopackage is included, all c and h files in that directory are also compiled and included.
+* To that end, in an effort to keep things portable, I've simply copied files from https://github.com/TulipCharts/tulipindicators into this repo, and changed include paths where necessary.
+* using a C compiler should not be required, outside of the one Go uses internally.
 
 ### Contribution guidelines ###
 
