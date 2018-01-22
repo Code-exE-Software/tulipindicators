@@ -66,14 +66,10 @@ func indicator(
 	)
 
 	if doError != nil {
-<<<<<<< HEAD
 		//skipping error because the output *is* actually valid.  SCARY
+		//referencing golang github issue 23468
 		//fmt.Printf("Windows error generated here:   \n%v\n", doError)
 		//return nil, doError
-=======
-		fmt.Printf("Windows error generated here: \n%v\n", doError)
-		//return nil, doError //skipping error because the output *is* actually valid.  SCARY
->>>>>>> 3a130d30e92097544420a0a3561c06699d561787
 	}
 
 	if doResponse == C.TI_INVALID_OPTION {
