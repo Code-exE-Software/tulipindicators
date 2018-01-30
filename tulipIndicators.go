@@ -1,6 +1,7 @@
 package tulipindicators
 
 /*
+#cgo LDFLAGS: -lm
 #include <stdio.h>
 #include <stdlib.h>
 #include "indicators.h"
